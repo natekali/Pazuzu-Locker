@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+*.log
+
+# Virtual environments
+.venv/
+.env/
+
+# IDEs and tooling
+.vscode/
+.idea/
+*.swp
+
+# Manifests and temp files
+manifests/
+*.pazuzu
