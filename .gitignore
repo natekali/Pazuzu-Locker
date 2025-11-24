@@ -1,24 +1,25 @@
-# Python
+# Python artifacts
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
 *.so
+
+# Virtual environments
+.venv/
+venv/
+
+# Packaging
 *.egg-info/
 .eggs/
 build/
 dist/
-*.log
 
-# Virtual environments
-.venv/
-.env/
-
-# IDEs and tooling
-.vscode/
+# IDEs and local metadata
 .idea/
+.vscode/
 *.swp
+.DS_Store
 
-# Manifests and temp files
-manifests/
-*.pazuzu
+# Generated manifests and logs
+*.csv
+*.log
+pazuzu_manifest*.json
